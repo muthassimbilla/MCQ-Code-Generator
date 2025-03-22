@@ -1,1 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Code Generator</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      .input-group {
+        margin-bottom: 10px;
+      }
+      #previewContainer {
+        border: 1px solid #ddd;
+        padding: 15px;
+        margin-top: 20px;
+      }
+      .answer {
+        display: none;
+      }
+      .history-entry {
+        font-family: monospace;
+        margin-bottom: 10px;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container mt-4">
+      <h2>Code Generator</h2>
+
+      <!-- Input Boxes -->
+      <div class="row g-3 mb-4">
+        <div class="col-md-2">
+          <label>Number</label>
+          <input
+            type="number"
+            step="1"
+            class="form-control"
+            id="input1"
+            data-replace="nnn"
+          />
+        </div>
+        <div class="col-md-2">
+          <label>Question</label>
+          <input
+            type="text"
+            class="form-control"
+            id="input2"
+            data-replace="qqq"
+          />
+        </div>
+        <div class="col-md-2">
+          <label>1st Answer</label>
+          <input
+            type="text"
+            class="form-control"
+            id="input3"
+            data-replace="1st"
+          />
+        </div>
+        <div class="col-md-2">
+          <label>Highlight</label>
+          <input
+            type="text"
+            class="form-control"
+            id="input4"
+            data-replace="hhh"
+          />
+        </div>
+        <div class="col-md-2">
+          <label>Last Part</label>
+          <input
+            type="text"
+            class="form-control"
+            id="input5"
+            data-replace="last"
+          />
+        </div>
+      </div>
+
+      <!-- Live Preview -->
+      <div class="mb-4">
+        <h4>Live Preview</h4>
+        <div id="previewContainer"></div>
+      </div>
+
+      <!-- Generated Code -->
+      <div class="mb-4">
+        <h4>Generated Code</h4>
+        <pre id="generatedCode" class="bg-light p-3"></pre>
+        <button class="btn btn-primary" onclick="copyCode()">Copy Code</button>
+      </div>
+
+      <!-- History -->
+      <div class="mb-4">
+        <h4>History</h4>
+        <div id="history"></div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      const codeTemplate = `
+<div class="question-box">
+  <h3>qqq</h3>
+  <button class="toggle-btn" onclick="toggleAnswer('ansnnn')">View</button>
+  <div id="ansnnn" class="answer"> উত্তর: 1st <mark class="geo-highlight">hhh</mark>; last </div>
+</div>
+        `.trim();
+
+      const inputs = document.querySelectorAll("input[data-replace]");
+      const previewContainer = document.getElementById("previewContainer");
+      const generatedCode = document.getElementById("generatedCode");
+      const historyDiv = document.getElementById("history");
+      let history = [];
+
+      function generateCode() {
+        let code = codeTemplate;
+        inputs.forEach((input) => {
+          const placeholder = input.dataset.replace;
+          const value = input.value.trim();
+          code = code.replace(new RegExp(placeholder, "g"), value);
+        });
+        return code;
+      }
+
+      function updateDisplay() {
+        const code = generateCode();
+        previewContainer.innerHTML = code;
+        generatedCode.textContent = code;
+      }
+
+      function toggleAnswer(id) {
+        const ans = document.getElementById(id);
+        ans.style.display = ans.style.display === "none" ? "block" : "none";
+      }
+
+      function copyCode() {
+        const code = generatedCode.textContent;
+        navigator.clipboard.writeText(code).then(() => {
+          // Auto-increment number
+          const numberInput = document.getElementById("input1");
+          let currentNumber = parseInt(numberInput.value) || 0;
+          currentNumber++;
+          numberInput.value = currentNumber;
+
+          // Add to history
+          const dateTime = new Date().toLocaleString("en-BD", {
+            timeZone: "Asia/Dhaka",
+            dateStyle: "short",
+            timeStyle: "short",
+          });
+          history.unshift({ code, dateTime });
+          updateHistoryDisplay();
+
+          // Reset all inputs except first one
+          for (let i = 1; i < inputs.length; i++) {
+            inputs[i].value = "";
+          }
+          updateDisplay();
+        });
+      }
+
+      function deleteHistory(index) {
+        history.splice(index, 1);
+        updateHistoryDisplay();
+      }
+
+      function updateHistoryDisplay() {
+        historyDiv.innerHTML = history
+          .map(
+            (entry, index) => `
+                <div class="history-entry">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <small>${entry.dateTime}</small>
+                        <button class="btn btn-sm btn-danger" onclick="deleteHistory(${index})">Delete</button>
+                    </div>
+                    <pre>${entry.code}</pre>
+                </div>
+            `
+          )
+          .join("");
+      }
+
+      inputs.forEach((input) => input.addEventListener("input", updateDisplay));
+      updateDisplay();
+    </script>
+  </body>
+</html>
 
